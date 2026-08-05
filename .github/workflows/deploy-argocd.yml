@@ -1,0 +1,36 @@
+name: Deploy ArgoCD to Homelab
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'k8s/argocd/**'
+  workflow_dispatch: # Allows manual trigger from the UI
+
+jobs:
+  deploy:
+    # Use 'self-hosted' if you set up a local runner, or 'ubuntu-latest' if using a VPN tunnel
+    runs-on: ubuntu-latest 
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up Kubernetes Configuration
+      uses: azure/k8s-set-context@v4
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBERNETES_KUBECONFIG }}
+
+    - name: Create ArgoCD Namespace
+      run: |
+        kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy ArgoCD via Kustomize
+      run: |
+        kubectl apply -k k8s/argocd/
+
+    - name: Verify Deployment Rollout
+      run: |
+        kubectl rollout status deployment/argocd-server -n argocd --timeout=90s
