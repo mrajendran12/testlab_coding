@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     # Use 'self-hosted' if you set up a local runner, or 'ubuntu-latest' if using a VPN tunnel
-    runs-on: ubuntu-latest 
+    runs-on: [self-hosted]
 
     steps:
     - name: Checkout Source Code
