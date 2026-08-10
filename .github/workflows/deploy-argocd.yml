@@ -14,7 +14,7 @@ jobs:
 
     - name: Install Kubectl Binary
       run: |
-          curl -LO "https://k8s.io(curl -L -s https://k8s.io)/bin/linux/amd64/kubectl"
+          curl -LO "https://k8s.io"
           chmod +x kubectl
           mkdir -p $HOME/.local/bin
           mv kubectl $HOME/.local/bin/kubectl
