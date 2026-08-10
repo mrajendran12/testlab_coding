@@ -1,29 +1,27 @@
-name: Deploy Argo CD via Homelab Runner
+name: Install ArgoCD to Homelab
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from the GitHub UI
 
 jobs:
-  deploy:
-    runs-on: [self-hosted, homelab]
+  deploy-argocd:
+    runs-on: self-hosted # Forces the job to run inside your home cluster
+    
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
-      # 👇 FIXED: Uses direct cluster IP to completely bypass CoreDNS lookups
-      - name: Authenticate Kubectl to Local Cluster
+      - name: Create ArgoCD Namespace
         run: |
-          /host/bin/kubectl config set-cluster homelab --server=https://10.96.0.1:443 --insecure-skip-tls-verify=true
-          /host/bin/kubectl config set-credentials runner --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-          /host/bin/kubectl config set-context homelab --cluster=homelab --user=runner
-          /host/bin/kubectl config use-context homelab
+          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 
-      # 👇 FIXED: Added --validate=false to skip remote schema downloads
-      - name: Create Argo CD Namespace
+      - name: Install ArgoCD Core Components
         run: |
-          /host/bin/kubectl create namespace argocd --dry-run=client -o yaml | /host/bin/kubectl apply --validate=false -f -
+          kubectl apply -n argocd -f https://githubusercontent.com
 
-      # 👇 FIXED: Added --validate=false here as well
-      - name: Install Argo CD Manifests
+      - name: Verify ArgoCD Deployment
         run: |
-          /host/bin/kubectl apply --validate=false -n argocd -f https://githubusercontent.com
+          kubectl rollout status deployment/argocd-server -n argocd --timeout=90s
