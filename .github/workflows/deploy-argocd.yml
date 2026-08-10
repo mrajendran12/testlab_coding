@@ -1,43 +1,38 @@
-name: Deploy ArgoCD to Homelab
+name: Deploy Argo CD via Homelab Runner
 
 on:
-  workflow_dispatch: # Allows manual trigger from the UI
+  workflow_dispatch:
 
 jobs:
   deploy:
-    # Use 'self-hosted' if you set up a local runner, or 'ubuntu-latest' if using a VPN tunnel
-    runs-on: [self-hosted]
-
+    runs-on: [self-hosted, homelab]
     steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
 
-    - name: Install Kubectl Binary
-      run: |
-          cd /tmp
-          curl -LO "https://k8s.io"
-          chmod +x kubectl
-          mkdir -p $HOME/.local/bin
-          mv kubectl $HOME/.local/bin/kubectl
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.0'
 
-    - name: Authenticate Kubectl to Local Cluster
-      run: |
+      - name: Authenticate Kubectl to Local Cluster
+        run: |
           kubectl config set-cluster homelab --server=https://default.svc --insecure-skip-tls-verify=true
           kubectl config set-credentials runner --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
           kubectl config set-context homelab --cluster=homelab --user=runner
           kubectl config use-context homelab
-          
-    - name: Create ArgoCD Namespace
-      run: |
-        kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 
-    - name: Install Argo CD Manifests
-      run: |
+      - name: Create Argo CD Namespace
+        run: |
+          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Install Argo CD Manifests
+        run: |
           kubectl apply -n argocd -f https://githubusercontent.com
 
-    - name: Wait for Deployment
-      run: |
+
+      - name: Wait for Deployment
+        run: |
           kubectl wait --namespace argocd \
             --for=condition=ready pod \
             --selector=app.kubernetes.io/name=argocd-server \
