@@ -12,18 +12,15 @@ jobs:
 
       - name: Authenticate Kubectl to Local Cluster
         run: |
-          export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-          kubectl config set-cluster homelab --server=https://default.svc --insecure-skip-tls-verify=true
-          kubectl config set-credentials runner --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-          kubectl config set-context homelab --cluster=homelab --user=runner
-          kubectl config use-context homelab
+          /host/bin/kubectl config set-cluster homelab --server=https://default.svc --insecure-skip-tls-verify=true
+          /host/bin/kubectl config set-credentials runner --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          /host/bin/kubectl config set-context homelab --cluster=homelab --user=runner
+          /host/bin/kubectl config use-context homelab
 
       - name: Create Argo CD Namespace
         run: |
-          export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+          /host/bin/kubectl create namespace argocd --dry-run=client -o yaml | /host/bin/kubectl apply -f -
 
       - name: Install Argo CD Manifests
         run: |
-          export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-          kubectl apply -n argocd -f https://githubusercontent.com
+          /host/bin/kubectl apply -n argocd -f https://githubusercontent.com
