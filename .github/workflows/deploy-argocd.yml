@@ -12,7 +12,7 @@ jobs:
 
       - name: Authenticate Kubectl to Local Cluster
         run: |
-          /host/bin/kubectl config set-cluster homelab --server=https://default.svc --insecure-skip-tls-verify=true
+          /host/bin/kubectl config set-cluster homelab --server=https://cluster.local --insecure-skip-tls-verify=true
           /host/bin/kubectl config set-credentials runner --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
           /host/bin/kubectl config set-context homelab --cluster=homelab --user=runner
           /host/bin/kubectl config use-context homelab
