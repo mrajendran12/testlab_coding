@@ -1,11 +1,6 @@
 name: Deploy ArgoCD to Homelab
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'k8s/argocd/**'
   workflow_dispatch: # Allows manual trigger from the UI
 
 jobs:
@@ -17,20 +12,17 @@ jobs:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    - name: Set up Kubernetes Configuration
-      uses: azure/k8s-set-context@v4
-      with:
-        method: kubeconfig
-        kubeconfig: ${{ secrets.KUBERNETES_KUBECONFIG }}
-
     - name: Create ArgoCD Namespace
       run: |
         kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Deploy ArgoCD via Kustomize
       run: |
-        kubectl apply -k k8s/argocd/
+         kubectl apply -n argocd -f https://githubusercontent.com
 
-    - name: Verify Deployment Rollout
+    - name: Wait for Deployment
       run: |
-        kubectl rollout status deployment/argocd-server -n argocd --timeout=90s
+          kubectl wait --namespace argocd \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=argocd-server \
+            --timeout=300s
