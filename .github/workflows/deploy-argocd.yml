@@ -10,17 +10,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4.2.2
 
+      # 👇 FIXED: Uses direct cluster IP to completely bypass CoreDNS lookups
       - name: Authenticate Kubectl to Local Cluster
         run: |
-          /host/bin/kubectl config set-cluster homelab --server=https://cluster.local --insecure-skip-tls-verify=true
+          /host/bin/kubectl config set-cluster homelab --server=https://10.96.0.1:443 --insecure-skip-tls-verify=true
           /host/bin/kubectl config set-credentials runner --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
           /host/bin/kubectl config set-context homelab --cluster=homelab --user=runner
           /host/bin/kubectl config use-context homelab
 
+      # 👇 FIXED: Added --validate=false to skip remote schema downloads
       - name: Create Argo CD Namespace
         run: |
-          /host/bin/kubectl create namespace argocd --dry-run=client -o yaml | /host/bin/kubectl apply -f -
+          /host/bin/kubectl create namespace argocd --dry-run=client -o yaml | /host/bin/kubectl apply --validate=false -f -
 
+      # 👇 FIXED: Added --validate=false here as well
       - name: Install Argo CD Manifests
         run: |
-          /host/bin/kubectl apply -n argocd -f https://githubusercontent.com
+          /host/bin/kubectl apply --validate=false -n argocd -f https://githubusercontent.com
