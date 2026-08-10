@@ -33,7 +33,7 @@ jobs:
 
     - name: Install Argo CD Manifests
       run: |
-          kubectl apply -n argocd --server-side --force-conflicts -f https://githubusercontent.com
+          kubectl apply -n argocd -f https://githubusercontent.com
 
     - name: Wait for Deployment
       run: |
