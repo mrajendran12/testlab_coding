@@ -1,15 +1,26 @@
 name: Install Argo CD via Local Manifest
 
 on:
-  workflow_dispatch: # Allows manual trigger via the GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy-argocd:
-    runs-on: self-hosted # Executes inside your homelab network
+    runs-on: self-hosted
     
     steps:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
+
+      # 🛠️ FIX: This step installs/locates kubectl on the self-hosted runner
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest' # Or specify your exact cluster version like 'v1.30.0'
+
+      # Optional: In case the runner doesn't know where your kubeconfig is
+      - name: Set Kubeconfig Path
+        run: |
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
 
       - name: Create Argo CD Namespace
         run: |
@@ -17,7 +28,6 @@ jobs:
 
       - name: Install Argo CD Using Repository Manifest
         run: |
-          # The runner looks inside the checked-out workspace for your file
           kubectl apply -n argocd --server-side --force-conflicts -f k8s/argocd/install.yaml
 
       - name: Wait for Argo CD Rollout
