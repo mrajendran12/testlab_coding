@@ -1,3 +1,25 @@
-- name: Install ArgoCD Core Components
+name: Install Argo CD via Local Manifest
+
+on:
+  workflow_dispatch: # Allows manual trigger via the GitHub UI
+
+jobs:
+  deploy-argocd:
+    runs-on: self-hosted # Executes inside your homelab network
+    
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Create Argo CD Namespace
         run: |
-          kubectl apply -n argocd -f argocd-install.yaml
+          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Install Argo CD Using Repository Manifest
+        run: |
+          # The runner looks inside the checked-out workspace for your file
+          kubectl apply -n argocd --server-side --force-conflicts -f k8s/argocd/install.yaml
+
+      - name: Wait for Argo CD Rollout
+        run: |
+          kubectl rollout status deployment/argocd-server -n argocd --timeout=300s
