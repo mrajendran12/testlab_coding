@@ -1,0 +1,3 @@
+- name: Install ArgoCD Core Components
+        run: |
+          kubectl apply -n argocd -f argocd-install.yaml
