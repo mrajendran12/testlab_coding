@@ -1,0 +1,22 @@
+name: Deploy Istio via Argo CD
+
+on:
+  workflow_dispatch: # Allows manual trigger via GitHub UI
+
+jobs:
+  deploy-istio:
+    runs-on: self-hosted # Runs on your local homelab runner
+    
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Apply Istio ArgoCD Applications
+        run: |
+          # Apply the manifest so Argo CD tracks and installs Istio
+          kubectl apply -f k8s/istio/istio-app.yml
